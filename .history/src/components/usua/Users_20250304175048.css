@@ -1,0 +1,65 @@
+/* Estilos para el contenedor principal */
+.container {
+    padding: 20px;
+  }
+  
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #007bff;
+    color: rgb(170, 161, 161);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Icono y título */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  /* Logo */
+  .logo {
+    height: 40px;
+  }
+  
+  /* Tabla */
+  .table-container {
+    margin-top: 20px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  th, td {
+    border: 1px solid #f80f0f;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  th {
+    background-color: #b0b4b8;
+    font-weight: bold;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #9c9ce8;
+  }
+  
+  tr:hover {
+    background-color: #f1f1f1;
+    transition: 0.3s;
+  }
+  

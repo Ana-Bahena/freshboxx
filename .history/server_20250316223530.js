@@ -1,0 +1,509 @@
+  const express = require("express");
+  const mysql = require("mysql2");
+  const cors = require("cors");
+  const bcrypt = require("bcrypt");
+  const dotenv = require("dotenv");
+
+  dotenv.config();
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
+
+  const db = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "1234",
+    database: process.env.DB_NAME || "fresh"
+  }); 
+
+  db.connect((err) => {
+    if (err) {
+      console.error("Error de conexión a MySQL:", err);
+    } else {
+      console.log("Conectado a MySQL");
+    }
+  });
+
+  app.post("/register", async (req, res) => {
+    const { nombre, email, password, telefono, direccion, rfc } = req.body;
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      db.query(
+        "INSERT INTO freshboxusuarios (us_email, us_password, us_tipo, us_estatus) VALUES (?, ?, 'cliente', 'Activo')",
+        [email, hashedPassword],
+        (err, result) => {
+          if (err) return res.status(500).json({ success: false, message: "Error al registrar en usuarios" });
+          const us_id = result.insertId;
+          console.log("Datos antes de insertar en clientes:", nombre, email, hashedPassword, telefono, direccion, rfc, us_id);
+
+          db.query(
+            "INSERT INTO freshboxclientes (cl_nombre, cl_email, cl_password, cl_telefono, cl_direccion, cl_rfc, us_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [nombre, email, hashedPassword, telefono, direccion, rfc, us_id],
+            (err) => {
+              if (err) {
+                console.error("Error al registrar en clientes:", err);
+                return res.status(500).json({ success: false, message: "Error al registrar en clientes" });
+              }
+              console.log("Cliente registrado correctamente");
+              res.json({ success: true, message: "Registro exitoso" });
+            }
+          );
+        }
+      );
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+  });
+
+  app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    const query = "SELECT * FROM freshboxusuarios WHERE us_email = ?";
+    
+    db.query(query, [email], async (err, results) => {
+      if (err) {
+        return res.json({ success: false, message: "Error en la consulta" });
+      }
+
+      if (results.length === 0) {
+        return res.json({ success: false, message: "Usuario no encontrado" });
+      }
+
+      const user = results[0];
+      const storedPassword = user.us_password;
+
+      if (storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2a$")) {
+        const match = await bcrypt.compare(password, storedPassword);
+        if (!match) {
+          return res.json({ success: false, message: "Contraseña incorrecta" });
+        }
+      } else {
+        if (password !== storedPassword) {
+          return res.json({ success: false, message: "Contraseña incorrecta" });
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Inicio de sesión exitoso", 
+        us_id: user.us_id,
+        us_tipo: user.us_tipo 
+      });
+      console.log("Usuario autenticado:", user.us_id, user.us_tipo);
+    });
+  });
+
+  app.get("/productos", (req, res) => {
+    db.query("SELECT * FROM freshboxproductos", (err, results) => {
+      if (err) {
+        console.error("Error en la base de datos:", err);
+        return res.status(500).json({ success: false, message: "Error en la base de datos" });
+      }
+      //console.log("Productos obtenidos:", results);
+      res.json({ success: true, productos: results });
+    });
+  });
+
+  app.get("/perfil", (req, res) => {
+    const { us_id } = req.query;
+
+    if (!us_id) {
+      console.error("Error: No se recibió us_id en la solicitud.");
+      return res.status(400).json({ success: false, message: "ID de usuario requerido" });
+    }
+
+    //console.log("us_id recibido en el backend:", us_id);
+
+    db.query(
+      "SELECT cl_nombre, cl_email, cl_telefono, cl_direccion, cl_rfc FROM freshboxclientes WHERE us_id = ?",
+      [us_id],
+      (err, results) => {
+        if (err) {
+          console.error("Error en la base de datos:", err);
+          return res.status(500).json({ success: false, message: "Error al obtener los detalles del cliente" });
+        }
+        if (results.length === 0) {
+          console.log("Cliente no encontrado para us_id:", us_id);
+          return res.status(404).json({ success: false, message: "Cliente no encontrado" });
+        }
+
+        console.log("Datos del cliente obtenidos:", results[0]);
+        res.json({ success: true, cliente: results[0] });
+      }
+    );
+  });
+
+  app.put("/editar-perfil", (req, res) => {
+    const { us_id, cl_nombre, cl_email, cl_telefono, cl_direccion, cl_rfc } = req.body;
+
+    db.query(
+      "UPDATE freshboxclientes SET cl_nombre = ?, cl_email = ?, cl_telefono = ?, cl_direccion = ?, cl_rfc = ? WHERE us_id = ?",
+      [cl_nombre, cl_email, cl_telefono, cl_direccion, cl_rfc, us_id],
+      (err, result) => {
+        if (err) {
+          console.error("Error al actualizar el perfil:", err);
+          return res.status(500).json({ success: false, message: "Error al actualizar el perfil" });
+        }
+
+        if (result.affectedRows > 0) {
+          res.json({ success: true, message: "Perfil actualizado correctamente" });
+        } else {
+          res.json({ success: false, message: "No se encontró el usuario para actualizar" });
+        }
+      }
+    );
+  });
+
+  app.get("/usuarios", (req, res) => {
+    db.query("SELECT * FROM freshboxusuarios", (err, results) => {
+      if (err) {
+        console.error("Error en la base de datos:", err);
+        return res.status(500).json({ success: false, message: "Error al obtener los usuarios" });
+      }
+      res.json({ success: true, usuarios: results });
+    });
+  });
+
+  app.post("/register-transportista", (req, res) => {
+    const { email, password, tipo, estatus, nombre, telefono, direccion, rfc, placas } = req.body;
+
+    if (tipo !== "transportista") {
+      return res.status(400).json({ success: false, message: "Solo se pueden registrar transportistas" });
+    }
+  
+    db.query(
+      "INSERT INTO freshboxusuarios (us_email, us_password, us_tipo, us_estatus) VALUES (?, ?, ?, ?)",
+      [email, password, tipo, estatus],
+      (err, result) => {
+        if (err) {
+          console.error("Error al registrar en usuarios:", err);
+          return res.status(500).json({ success: false, message: "Error al registrar transportista" });
+        }
+  
+        const us_id = result.insertId; 
+
+        db.query(
+          "INSERT INTO freshboxtransportistas (ts_nombre, ts_email, ts_password, ts_telefono, ts_direccion, ts_rfc, ts_placas, us_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          [nombre, email, password, telefono, direccion, rfc, placas, us_id],
+          (err) => {
+            if (err) {
+              console.error("Error al registrar en transportistas:", err);
+              return res.status(500).json({ success: false, message: "Error al registrar transportista en la tabla transportistas" });
+            }
+
+            res.json({ success: true, message: "Transportista registrado correctamente" });
+          }
+        );
+      }
+    );
+  });
+
+  app.post("/insert-productos", (req, res) => {
+    const { pr_nombre, pr_precio, pr_cantidad, pr_descripcion, pr_imagen, pr_temperatura, pr_status, pr_peso } = req.body;
+    const queryInsert = "INSERT INTO freshboxproductos (pr_nombre, pr_precio, pr_cantidad, pr_descripcion, pr_imagen, pr_temperatura, pr_status, pr_peso) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    db.query(queryInsert, [pr_nombre, pr_precio, pr_cantidad, pr_descripcion, pr_imagen, pr_temperatura, pr_status, pr_peso], (err, result) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Error al insertar el producto", error: err });
+        }
+
+        const querySelect = "SELECT * FROM freshboxproductos";
+        db.query(querySelect, (err, productos) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: "Error al obtener productos", error: err });
+            }
+
+            res.json({ success: true, message: "Producto agregado correctamente", productos });
+          });
+    });
+});
+
+app.get("/obtener-productos", (req, res) => {
+  const query = "SELECT * FROM freshboxproductos";
+  db.query(query, (err, productos) => {
+      if (err) {
+          return res.status(500).json({ success: false, message: "Error al obtener productos", error: err });
+      }
+      res.json({ success: true, productos });
+  });
+});
+
+app.put("/editar-producto/:id", (req, res) => {
+  const { id } = req.params;
+  const { pr_nombre, pr_precio, pr_cantidad, pr_descripcion, pr_imagen, pr_temperatura, pr_status, pr_peso } = req.body;
+
+  const query = `
+      UPDATE freshboxproductos
+      SET pr_nombre = ?, pr_precio = ?, pr_cantidad = ?, pr_descripcion = ?, pr_imagen = ?, pr_temperatura = ?, pr_status = ?, pr_peso = ?
+      WHERE pr_id = ?
+  `;
+  db.query(query, [pr_nombre, pr_precio, pr_cantidad, pr_descripcion, pr_imagen, pr_temperatura, pr_status, pr_peso, id], (err, result) => {
+      if (err) {
+          console.error("Error al actualizar el producto:", err);
+          return res.status(500).json({ success: false, message: "Error al actualizar el producto" });
+      }
+      res.json({ success: true, message: "Producto actualizado correctamente" });
+  });
+});
+
+app.get("/cliente/:us_id", (req, res) => {
+  const { us_id } = req.params;
+
+  db.query(
+    "SELECT cl_nombre, cl_email, cl_telefono, cl_direccion, cl_rfc FROM freshboxclientes WHERE us_id = ?",
+    [us_id],
+    (err, results) => {
+      if (err) {
+        console.error("Error en la base de datos:", err);
+        return res.status(500).json({ success: false, message: "Error al obtener los datos del cliente" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ success: false, message: "Cliente no encontrado" });
+      }
+      res.json({ success: true, cliente: results[0] });
+    }
+  );
+});
+
+app.post("/actualizar-stock", (req, res) => {
+  const productos = req.body.productos; 
+  if (!productos || productos.length === 0) {
+    console.log("Productos recibidos:", productos);
+    return res.status(400).json({ success: false, message: "No se enviaron productos" });
+  }
+
+  const queries = productos.map((producto) => {
+    return new Promise((resolve, reject) => {
+      db.query(
+        "UPDATE freshboxproductos SET pr_cantidad = pr_cantidad - ? WHERE pr_id = ?",
+        [producto.cantidad, producto.pr_id],
+        (err, result) => {
+          if (err) {
+            console.error("Error en la consulta SQL:", err);
+            reject(err);
+          } else {
+            console.log("Consulta ejecutada con éxito para producto ID:", producto.pr_id);
+            resolve(result);
+          }
+        }
+      );
+    });
+  });
+
+  Promise.all(queries)
+    .then(() => {
+      res.json({ success: true, message: "Stock actualizado correctamente" });
+    })
+    .catch((error) => {
+      console.error("Error al actualizar el stock:", error);
+      res.status(500).json({ success: false, message: "Error al actualizar el stock" });
+    });
+  });
+
+  app.post('/api/finalizarcompra', (req, res) => {
+    console.log('Solicitud recibida para finalizar compra:', req.body);
+    const { carrito, us_id, vt_idFactura } = req.body;
+    //console.log("Usuario ID recibido en el backend:", us_id);
+  
+    if (!carrito || carrito.length === 0 || !us_id || !vt_idFactura) {
+      return res.status(400).json({ success: false, message: "Datos incompletos para finalizar la compra" });
+    }
+  
+    const fechaActual = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const total = carrito.reduce((acc, producto) => acc + parseFloat(producto.pr_precio) * producto.cantidad, 0);
+  
+    const buscarClienteQuery = "SELECT US_id FROM freshboxusuarios WHERE us_id = ?";
+    db.query(buscarClienteQuery, [us_id], (err, results) => {
+      if (err || results.length === 0) {
+        console.error("Error al buscar cliente:", err || "Cliente no encontrado");
+        return res.status(500).json({ success: false, message: "Cliente no encontrado para el usuario" });
+      }
+
+      db.beginTransaction((err) => {
+        if (err) {
+          console.error("Error al iniciar la transacción:", err);
+          return res.status(500).json({ success: false, message: "Error interno" });
+        }
+  
+        const ventaQuery = `
+          INSERT INTO freshboxventas (vt_total, vt_fecha, vt_status, vt_pesoTotal, vt_formaPago, us_id, vt_idFactura)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+  
+        db.query(ventaQuery, [total, fechaActual, 'pendiente', 0, 'paypal', us_id, vt_idFactura], (err, result) => {
+          if (err) {
+            return db.rollback(() => {
+              console.error("Error al insertar venta:", err);
+              res.status(500).json({ success: false, message: "Error al registrar la venta" });
+            });
+          }
+  
+          const vt_id = result.insertId;
+  
+          const carritoQuery = "INSERT INTO freshboxcarritocompras (cc_cantidad, cc_subtotal, cc_precio, vt_id, pr_id) VALUES ?";
+          const carritoValores = carrito.map(p => [
+            p.cantidad, 
+            parseFloat(p.pr_precio) * p.cantidad, 
+            parseFloat(p.pr_precio), 
+            vt_id, 
+            p.pr_id
+          ]);
+  
+          db.query(carritoQuery, [carritoValores], (err) => {
+            if (err) {
+              return db.rollback(() => {
+                console.error("Error al insertar carrito de compras:", err);
+                res.status(500).json({ success: false, message: "Error al registrar los productos del carrito" });
+              });
+            }
+  
+            db.commit((err) => {
+              if (err) {
+                return db.rollback(() => {
+                  console.error("Error al confirmar la transacción:", err);
+                  res.status(500).json({ success: false, message: "Error al confirmar la compra" });
+                });
+              }
+              res.json({ success: true, message: "Compra finalizada correctamente", vt_id });
+            });
+          });
+        });
+      });
+    });
+  });
+
+const obtenerCliente = async (us_id) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      "SELECT cl_nombre, cl_email, cl_telefono, cl_direccion, cl_rfc FROM freshboxclientes WHERE us_id = ?",
+      [us_id],
+      (err, results) => {
+        if (err) {
+          reject("Error al obtener datos del cliente: " + err);
+        } else if (results.length === 0) {
+          reject("Cliente no encontrado.");
+        } else {
+          resolve(results[0]); 
+        }
+      }
+    );
+  });
+};
+
+const obtenerDetallesVenta = async (us_id) => {
+  return new Promise((resolve, reject) => {
+    // Obtener el ID de la última venta realizada por el usuario
+    db.query(
+      "SELECT vt_id FROM freshboxventas WHERE us_id = ? ORDER BY vt_fecha DESC LIMIT 1",
+      [us_id],
+      (err, results) => {
+        if (err) {
+          reject("Error al obtener la venta: " + err);
+        } else if (results.length === 0) {
+          reject("No se encontró una venta para este cliente.");
+        } else {
+          const vt_id = results[0].vt_id;
+
+          // Obtener los detalles de la venta (productos, cantidad, precio, subtotal)
+          db.query(
+            "SELECT p.pr_nombre, cc.cc_cantidad AS cantidad, cc.cc_precio AS precio, cc.cc_subtotal AS subtotal " +
+            "FROM freshboxcarritocompras cc " +
+            "JOIN freshboxproductos p ON cc.pr_id = p.pr_id " + // Se usa el alias 'p' para 'productos'
+            "WHERE cc.vt_id = ?",
+            [vt_id],
+            (err, results) => {
+              if (err) {
+                reject("Error al obtener los detalles de la venta: " + err);
+              } else {
+                resolve(results); // Devuelve los detalles de la venta
+              }
+            }
+          );
+        }
+      }
+    );
+  });
+};
+
+
+const PDFDocument = require("pdfkit");
+
+app.get("/descargar-factura", async (req, res) => {
+  const { us_id } = req.query;
+
+  if (!us_id) {
+    return res.status(400).json({ success: false, message: "Falta el ID de usuario." });
+  }
+
+  try {
+    const cliente = await obtenerCliente(us_id);
+    const detallesVenta = await obtenerDetallesVenta(us_id);
+
+    const doc = new PDFDocument();
+    const filename = `factura_${us_id}.pdf`;
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    doc.pipe(res);
+
+    // Información del cliente
+    doc.fillColor('#0000FF').fontSize(30).text("FRESHBOX", { align: "center" });
+    doc.fontSize(20).text("Factura", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(14).text(`Nombre: ${cliente.cl_nombre}`);
+    doc.text(`Email: ${cliente.cl_email}`);
+    doc.text(`Teléfono: ${cliente.cl_telefono}`);
+    doc.text(`Dirección: ${cliente.cl_direccion}`);
+    doc.text(`RFC: ${cliente.cl_rfc}`);
+    doc.moveDown();
+
+    // Título de la tabla
+    doc.fontSize(16).text("Detalles de la Compra:", { underline: true });
+    doc.moveDown();
+
+    // Crear la tabla de productos
+    const tableTop = doc.y;
+    const itemWidth = 100;
+    const qtyWidth = 100;
+    const priceWidth = 100;
+    const totalWidth = 100;
+
+    // Cabecera de la tabla
+    doc.fontSize(12).text("Producto", 50, tableTop, { width: itemWidth, align: "left" });
+    doc.text("Cantidad", 150, tableTop, { width: qtyWidth, align: "center" });
+    doc.text("Precio", 250, tableTop, { width: priceWidth, align: "center" });
+    doc.text("Subtotal", 350, tableTop, { width: totalWidth, align: "center" });
+    doc.moveDown();
+
+    // Dibujar los productos
+    let total = 0;
+    detallesVenta.forEach((producto, index) => {
+      const { producto_nombre, cantidad, precio, subtotal } = producto;
+      total += subtotal;
+
+      doc.fontSize(12)
+        .text(producto_nombre, 50, doc.y, { width: itemWidth, align: "left" })
+        .text(cantidad, 150, doc.y, { width: qtyWidth, align: "center" })
+        .text(`$${precio.toFixed(2)}`, 250, doc.y, { width: priceWidth, align: "center" })
+        .text(`$${subtotal.toFixed(2)}`, 350, doc.y, { width: totalWidth, align: "center" });
+      
+      doc.moveDown();
+    });
+
+    // Total
+    doc.moveDown();
+    doc.fontSize(14).text(`Total: $${total.toFixed(2)}`, { align: "right" });
+    doc.moveDown();
+
+    // Mensaje final
+    doc.text("Gracias por tu compra!", { align: "center" });
+
+    doc.end();
+  } catch (error) {
+    console.error("Error generando la factura:", error);
+    res.status(500).json({ success: false, message: error.toString() });
+  }
+});
+
+  app.listen(5001, () => console.log("Servidor corriendo en http://localhost:5001"));

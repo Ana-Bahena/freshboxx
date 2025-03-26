@@ -1,0 +1,35 @@
+.pago-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Altura completa de la pantalla */
+    background-color: #f8f7f7; /* Fondo opcional */
+  }
+  
+  .btn-pagar, .btn-cancelar {
+    padding: 15px 30px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .btn-pagar {
+    background-color: #4A90E2; /* Color para el botón de pagar */
+    color: white;
+  }
+  
+  .btn-cancelar {
+    background-color: #d9534f; /* Color para el botón de cancelar */
+    color: white;
+  }
+
+  .paypal {
+    width: 20px; /* Ajusta el tamaño según lo necesites */
+    height: auto;
+    margin-right: 10px; /* Espacio entre el ícono y el texto */
+    vertical-align: middle; /* Alineación vertical */
+  }
+  
