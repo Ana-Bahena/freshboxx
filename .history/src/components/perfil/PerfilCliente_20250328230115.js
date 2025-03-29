@@ -17,7 +17,7 @@ const PerfilCliente = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userSession");
+    const userId = localStorage.getItem("userSession"); // Obtener el ID del usuario
     if (!userId) {
       console.error("Error: us_id no encontrado en localStorage.");
       setLoading(false);

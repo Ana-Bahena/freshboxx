@@ -98,7 +98,7 @@ export default function ControlCargas() {
   const handleSubmitContenedor = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("https://fresh-back.onrender.com/agregar-contenedor", {
+      const response = await fetch("http://localhost:5001/agregar-contenedor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ export default function ControlCargas() {
     e.preventDefault();
   
     try {
-      const response = await fetch("https://fresh-back.onrender.com/agregar-carga-contenedor", {
+      const response = await fetch("http://localhost:5001/agregar-carga-contenedor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +161,7 @@ export default function ControlCargas() {
 
   const obtenerListaCargas = async () => {
     try {
-      const response = await fetch("https://fresh-back.onrender.com/listacargas");
+      const response = await fetch("http://localhost:5001/listacargas");
       if (response.ok) {
         const data = await response.json();  
         console.log("Lista de cargas:", data);
@@ -178,7 +178,7 @@ export default function ControlCargas() {
 
   const obtenerListaVentas = async () => {
     try {
-      const respuesta = await fetch("https://fresh-back.onrender.com/listaventas");
+      const respuesta = await fetch("http://localhost:5001/listaventas");
       if (respuesta.ok) {
         const datos = await respuesta.json();
         console.log("Lista de ventas:", datos);
@@ -195,7 +195,7 @@ export default function ControlCargas() {
 
   const obtenerTransportistas = async () => {
     try {
-      const response = await fetch("https://fresh-back.onrender.com/listatransportistas");
+      const response = await fetch("http://localhost:5001/listatransportistas");
       if (response.ok) {
         const data = await response.json();
         setTransportistas(data);
@@ -601,6 +601,7 @@ export default function ControlCargas() {
             overflow-y: auto; 
             border: 10px solid #ddd; 
           }
+
         `}
       </style>
     </div>

@@ -121,6 +121,7 @@ export default function Entregas() {
               </tbody>
             </table>
 
+            {/* Total de Ingresos */}
             {ventas.length > 0 && (
               <div className="total-ingresos">
                 <h3>Total de Ingresos: ${totalIngresos.toFixed(2)}</h3>

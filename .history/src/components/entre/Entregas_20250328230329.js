@@ -76,6 +76,7 @@ export default function Entregas() {
             </table>
           </div>
 
+          {/* Reporte de Ventas */}
           <div className="tabla-container reporte">
             <h2>Reporte de Ventas</h2>
             <br />
@@ -121,6 +122,7 @@ export default function Entregas() {
               </tbody>
             </table>
 
+            {/* Total de Ingresos */}
             {ventas.length > 0 && (
               <div className="total-ingresos">
                 <h3>Total de Ingresos: ${totalIngresos.toFixed(2)}</h3>

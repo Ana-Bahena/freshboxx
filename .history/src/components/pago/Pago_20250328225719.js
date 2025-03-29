@@ -77,7 +77,7 @@ const PayPalButtonComponent = () => {
           alert("Hubo un error al actualizar el stock. Intenta nuevamente.");
         });
 
-        await fetch("https://fresh-back.onrender.com/registrar-venta", {
+        await fetch("http://localhost:5001/registrar-venta", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

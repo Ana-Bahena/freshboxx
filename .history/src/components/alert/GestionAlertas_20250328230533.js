@@ -129,6 +129,7 @@ export default function GestionAlertas() {
         </form>
       </div>
 
+      {/* Lista de alertas */}
       <div className="alert-list">
         {alertas.map((alerta) => (
           <div key={alerta.id} className={`alerta ${alerta.estado}`}>
@@ -149,6 +150,7 @@ export default function GestionAlertas() {
         ))}
       </div>
 
+      {/* Modal para editar alerta */}
       {modalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -166,6 +168,8 @@ export default function GestionAlertas() {
             <button onClick={handleUpdate}>Actualizar</button>
             <button onClick={() => setModalOpen(false)}>Cerrar</button>
           </div>
+
+          
         </div>
       )}
 

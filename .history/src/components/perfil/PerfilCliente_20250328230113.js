@@ -17,7 +17,7 @@ const PerfilCliente = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userSession");
+    const userId = localStorage.getItem("userSession"); // Obtener el ID del usuario
     if (!userId) {
       console.error("Error: us_id no encontrado en localStorage.");
       setLoading(false);
@@ -31,7 +31,7 @@ const PerfilCliente = () => {
 
         if (response.data.success) {
           setCliente(response.data.cliente);
-          setEditedData(response.data.cliente); 
+          setEditedData(response.data.cliente); // Seteamos los datos iniciales para editar
           localStorage.setItem("clienteId", response.data.cliente.cl_id); 
         } else {
           console.error("Error en la respuesta del servidor:", response.data.message);

@@ -25,7 +25,7 @@ const GraciasCompra = () => {
     }
 
     try {
-      const response = await fetch(`https://fresh-back.onrender.com/perfil?us_id=${userId}`);
+      const response = await fetch(`http://localhost:5001/perfil?us_id=${userId}`);
       const data = await response.json();
 
       if (data.success) {

@@ -195,7 +195,7 @@ export default function ControlCargas() {
 
   const obtenerTransportistas = async () => {
     try {
-      const response = await fetch("https://fresh-back.onrender.com/listatransportistas");
+      const response = await fetch("http://localhost:5001/listatransportistas");
       if (response.ok) {
         const data = await response.json();
         setTransportistas(data);
@@ -601,6 +601,7 @@ export default function ControlCargas() {
             overflow-y: auto; 
             border: 10px solid #ddd; 
           }
+
         `}
       </style>
     </div>

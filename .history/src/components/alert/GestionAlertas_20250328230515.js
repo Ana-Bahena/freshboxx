@@ -51,11 +51,13 @@ export default function GestionAlertas() {
       .catch((error) => console.error("Error al agregar alerta:", error));
   };
 
+  // Editar alerta
   const handleEdit = (alerta) => {
     setAlertaEdit(alerta);
     setModalOpen(true);
   };
 
+  // Actualizar alerta
   const handleUpdate = () => {
     axios
       .put(`https://fresh-back.onrender.com/alertas/${alertaEdit.id}`, alertaEdit)
@@ -70,6 +72,7 @@ export default function GestionAlertas() {
       .catch((error) => console.error("Error al actualizar alerta:", error));
   };
 
+  // Eliminar alerta
   const handleDelete = (id) => {
     axios
       .delete(`https://fresh-back.onrender.com/alertas/${id}`)
@@ -92,6 +95,7 @@ export default function GestionAlertas() {
       </header>
 
       <div className="form-container">
+        {/* Formulario para agregar alerta */}
         <form onSubmit={handleSubmit} className="alert-form">
           <h2>Agregar Alerta</h2>
           <br/>
@@ -129,6 +133,7 @@ export default function GestionAlertas() {
         </form>
       </div>
 
+      {/* Lista de alertas */}
       <div className="alert-list">
         {alertas.map((alerta) => (
           <div key={alerta.id} className={`alerta ${alerta.estado}`}>
@@ -149,6 +154,7 @@ export default function GestionAlertas() {
         ))}
       </div>
 
+      {/* Modal para editar alerta */}
       {modalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -166,6 +172,8 @@ export default function GestionAlertas() {
             <button onClick={handleUpdate}>Actualizar</button>
             <button onClick={() => setModalOpen(false)}>Cerrar</button>
           </div>
+
+          
         </div>
       )}
 

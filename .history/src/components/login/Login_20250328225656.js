@@ -61,7 +61,7 @@ function Login({ setIsLoggedIn }) {
       if (response.data.success) {
         localStorage.setItem("userSession", response.data.us_id);
         localStorage.setItem("userType", response.data.us_tipo);
-        console.log("Tipo de usuario guardado:", response.data.us_tipo); 
+        console.log("Tipo de usuario guardado:", response.data.us_tipo);  // Verifica que el valor sea correcto
         setIsLoggedIn(true);
         setUserType(response.data.us_tipo);
       } else {
@@ -102,7 +102,7 @@ function Login({ setIsLoggedIn }) {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      axios.post("https://fresh-back.onrender.com/register", { nombre, email, password, telefono, direccion, rfc })
+      axios.post("http://localhost:5001/register", { nombre, email, password, telefono, direccion, rfc })
         .then((response) => {
           if (response.data.success) {
             alert("Registro exitoso. Ahora puedes iniciar sesión.");

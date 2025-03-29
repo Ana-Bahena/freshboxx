@@ -17,7 +17,7 @@ const PerfilCliente = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userSession");
+    const userId = localStorage.getItem("userSession"); // Obtener el ID del usuario
     if (!userId) {
       console.error("Error: us_id no encontrado en localStorage.");
       setLoading(false);
@@ -31,8 +31,8 @@ const PerfilCliente = () => {
 
         if (response.data.success) {
           setCliente(response.data.cliente);
-          setEditedData(response.data.cliente); 
-          localStorage.setItem("clienteId", response.data.cliente.cl_id); 
+          setEditedData(response.data.cliente); // Seteamos los datos iniciales para editar
+          localStorage.setItem("clienteId", response.data.cliente.cl_id); // Guarda el cl_id
         } else {
           console.error("Error en la respuesta del servidor:", response.data.message);
         }
@@ -69,8 +69,8 @@ const PerfilCliente = () => {
       const response = await axios.put("https://fresh-back.onrender.com/editar-perfil", { ...editedData, us_id: userId });
       if (response.data.success) {
         alert("Perfil actualizado correctamente");
-        setCliente(editedData); 
-        setIsModalOpen(false); 
+        setCliente(editedData); // Actualizamos el estado con los datos editados
+        setIsModalOpen(false); // Cerramos el modal
       } else {
         alert("Error al actualizar el perfil");
       }

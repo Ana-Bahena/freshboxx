@@ -166,6 +166,8 @@ export default function GestionAlertas() {
             <button onClick={handleUpdate}>Actualizar</button>
             <button onClick={() => setModalOpen(false)}>Cerrar</button>
           </div>
+
+          
         </div>
       )}
 

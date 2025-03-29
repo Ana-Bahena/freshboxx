@@ -1,5 +1,5 @@
 .carritoo-containeer {
-  width: 100vw;
+  width: 100vw; /* Ocupa todo el ancho de la pantalla */
   height: 100vh; 
   background-color: #beecec;
   border-radius: 10px;
@@ -103,7 +103,7 @@
   color: white;
   text-align: center;
   padding: 20px 0;
-  margin: 105px 20px 20px 20px;
+  margin: 105px 20px 20px 20px; /* Espacio arriba y en los lados */
   border-radius: 3px; 
 }
 
@@ -123,7 +123,7 @@
   align-items: center;
   justify-content: flex-start; 
   width: 90%;
-  max-width: 1200px;
+  max-width: 1200px; /* Ancho máximo opcional */
   margin: 40px auto;
   background-color: #f8f7f7;
   border-radius: 20px; 

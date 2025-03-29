@@ -23,7 +23,7 @@ export default function GestionProductos() {
     });
 
     useEffect(() => {
-        axios.get("https://fresh-back.onrender.com/obtener-productos")  
+        axios.get("http://localhost:5001/obtener-productos")  
             .then((response) => {
                 if (response.data.success) {
                     setProductos(response.data.productos);
@@ -58,7 +58,7 @@ export default function GestionProductos() {
     };
 
     const handleUpdate = () => {
-        axios.put(`https://fresh-back.onrender.com/editar-producto/${productoEdit.pr_id}`, productoEdit)
+        axios.put(`http://localhost:5001/editar-producto/${productoEdit.pr_id}`, productoEdit)
             .then((response) => {
                 if (response.data.success) {
                     setProductos(productos.map(p => p.pr_id === productoEdit.pr_id ? productoEdit : p));
@@ -68,20 +68,24 @@ export default function GestionProductos() {
         .catch((error) => console.error("Error al actualizar producto:", error));
     };    
 
+    // Función para manejar cambios en el buscador
     const handleBusquedaChange = (e) => {
         const query = e.target.value;
         setBusqueda(query);
 
+        // Filtrar productos por nombre
         const productosFiltrados = productos.filter((producto) =>
             producto.pr_nombre.toLowerCase().includes(query.toLowerCase())
         );
 
-        setProductosFiltrados(productosFiltrados); 
+        setProductosFiltrados(productosFiltrados); // Actualizar productos filtrados
     };
 
+
+    // Enviar nuevo producto a la API
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post("https://fresh-back.onrender.com/insert-productos", nuevoProducto)
+        axios.post("http://localhost:5001/insert-productos", nuevoProducto)
         .then((response) => {
             if (response.data.success) {
                 setProductos(response.data.productos);

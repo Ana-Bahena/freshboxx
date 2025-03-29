@@ -20,10 +20,11 @@ export default function Entregas() {
 
   useEffect(() => {
     if (fechaInicio && fechaFin) {
-      fetch(`https://fresh-back.onrender.com/api/reporte-ventas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`)
+      fetch(`http://localhost:5001/api/reporte-ventas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`)
         .then((response) => response.json())
         .then((data) => {
           setVentas(data);
+          // Calcular el total de ingresos
           const total = data.reduce((acc, venta) => acc + parseFloat(venta.totalVenta), 0);
           setTotalIngresos(total);
         })
@@ -47,6 +48,7 @@ export default function Entregas() {
 
       <div className="container">
         <div className="content">
+          {/* Entregas Realizadas */}
           <div className="tabla-container">
             <h2>Entregas Realizadas</h2>
             <br />
@@ -76,6 +78,7 @@ export default function Entregas() {
             </table>
           </div>
 
+          {/* Reporte de Ventas */}
           <div className="tabla-container reporte">
             <h2>Reporte de Ventas</h2>
             <br />
@@ -121,6 +124,7 @@ export default function Entregas() {
               </tbody>
             </table>
 
+            {/* Total de Ingresos */}
             {ventas.length > 0 && (
               <div className="total-ingresos">
                 <h3>Total de Ingresos: ${totalIngresos.toFixed(2)}</h3>

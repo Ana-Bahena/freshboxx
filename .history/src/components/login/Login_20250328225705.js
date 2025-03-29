@@ -61,7 +61,7 @@ function Login({ setIsLoggedIn }) {
       if (response.data.success) {
         localStorage.setItem("userSession", response.data.us_id);
         localStorage.setItem("userType", response.data.us_tipo);
-        console.log("Tipo de usuario guardado:", response.data.us_tipo); 
+        console.log("Tipo de usuario guardado:", response.data.us_tipo);  // Verifica que el valor sea correcto
         setIsLoggedIn(true);
         setUserType(response.data.us_tipo);
       } else {

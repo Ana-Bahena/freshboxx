@@ -112,6 +112,7 @@ body {
     color: #007f91;
 }
 
+/* ✨ Animaciones */
 @keyframes fadeIn {
     from {
         opacity: 0;

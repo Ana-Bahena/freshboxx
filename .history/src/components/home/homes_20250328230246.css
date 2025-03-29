@@ -67,7 +67,7 @@
     justify-items: flex-start;
     margin-top: 15px;
     flex-wrap: wrap; 
-    overflow-x: auto; 
+    overflow-x: auto; /* Agrega un desplazamiento horizontal si los productos no caben en la pantalla */
   }
   
   .producto-card {
@@ -77,7 +77,7 @@
     width: 400px;
     transition: transform 0.3s ease-in-out;
     margin-top: 55px;
-    flex-shrink: 0; 
+    flex-shrink: 0;  /* Evita que los productos se reduzcan de tamaño */
     text-align: center; 
   }
   
@@ -189,7 +189,7 @@
     width: 32px; 
     height: 32px;
     cursor: pointer;
-    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2)); 
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2)); /* Sombra ligera para resaltar */
   }
   
   .carrito-cantidad {

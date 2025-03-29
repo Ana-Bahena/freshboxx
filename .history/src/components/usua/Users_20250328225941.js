@@ -58,7 +58,7 @@ const Users = () => {
     }
   
     try {
-      await axios.post("https://fresh-back.onrender.com/register-transportista", newUser);
+      await axios.post("http://localhost:5001/register-transportista", newUser);
       fetchUsers();
       setNewUser({ email: "", password: "", tipo: "transportista", estatus: "", nombre: "", telefono: "", direccion: "", rfc: "", placas: "" });
     } catch (error) {

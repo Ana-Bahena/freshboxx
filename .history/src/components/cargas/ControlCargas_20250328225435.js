@@ -601,6 +601,7 @@ export default function ControlCargas() {
             overflow-y: auto; 
             border: 10px solid #ddd; 
           }
+
         `}
       </style>
     </div>

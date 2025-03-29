@@ -72,6 +72,7 @@ export default function GestionProductos() {
         const query = e.target.value;
         setBusqueda(query);
 
+        // Filtrar productos por nombre
         const productosFiltrados = productos.filter((producto) =>
             producto.pr_nombre.toLowerCase().includes(query.toLowerCase())
         );
