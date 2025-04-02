@@ -377,21 +377,14 @@ app.post("/actualizar-stock", (req, res) => {
     const fechaActual = new Date().toISOString().slice(0, 19).replace('T', ' ');
     const total = carrito.reduce((acc, producto) => acc + parseFloat(producto.pr_precio) * producto.cantidad, 0);
 
-    db.query("SELECT cl_cuenta, cl_saldo, cl_id FROM freshboxclientes WHERE us_id = ?", [us_id], (err, results) => {
+    const buscarClienteQuery = "SELECT cl_id FROM freshboxclientes WHERE us_id = ?";
+    db.query(buscarClienteQuery, [us_id], (err, results) => {
         if (err || results.length === 0) {
             console.error("Error al buscar cliente:", err || "Cliente no encontrado");
             return res.status(500).json({ success: false, message: "Cliente no encontrado para el usuario" });
         }
 
-        const cliente = results[0];
-        const cuentaCliente = cliente.cl_cuenta;
-        const saldoCliente = cliente.cl_saldo;
-        const clienteId = cliente.cl_id;
-        const cuentaDefault = "123456789";
-
-        if (saldoCliente < total) {
-            return res.status(400).json({ success: false, message: "Saldo insuficiente en la cuenta del cliente" });
-        }
+        const cl_id = results[0].cl_id;
 
         db.beginTransaction((err) => {
             if (err) {
@@ -414,7 +407,10 @@ app.post("/actualizar-stock", (req, res) => {
 
                 const vt_id = result.insertId;
 
-                const carritoQuery = "INSERT INTO freshboxcarritocompras (cc_cantidad, cc_subtotal, cc_precio, vt_id, pr_id, us_id) VALUES ?";
+                const carritoQuery = `
+                    INSERT INTO freshboxcarritocompras (cc_cantidad, cc_subtotal, cc_precio, vt_id, pr_id, us_id) 
+                    VALUES ?
+                `;
                 const carritoValores = carrito.map(p => [
                     p.cantidad, 
                     parseFloat(p.pr_precio) * p.cantidad, 
@@ -432,44 +428,22 @@ app.post("/actualizar-stock", (req, res) => {
                         });
                     }
 
-                    const actualizarSaldoCliente = "UPDATE freshboxclientes SET cl_saldo = cl_saldo - ? WHERE cl_cuenta = ?";
-                    const actualizarSaldoDestino = "UPDATE freshboxclientes SET cl_saldo = cl_saldo + ? WHERE cl_cuenta = ?";
-                    const insertarTransaccion = "INSERT INTO freshboxtransacciones (cl_id, tr_monto, tr_cuenta) VALUES (?, ?, ?)";
-
-                    db.query(actualizarSaldoCliente, [total, cuentaCliente], (err) => {
+                    db.query("CALL freshBox.realizar_compra(?, ?)", [cl_id, total], (err, results) => {
                         if (err) {
                             return db.rollback(() => {
-                                console.error("Error al actualizar saldo del cliente:", err);
-                                res.status(500).json({ success: false, message: "Error al procesar la transacción" });
+                                console.error("Error al realizar la transacción de pago:", err);
+                                res.status(500).json({ success: false, message: "Error al realizar el pago" });
                             });
                         }
 
-                        db.query(actualizarSaldoDestino, [total, cuentaDefault], (err) => {
+                        db.commit((err) => {
                             if (err) {
                                 return db.rollback(() => {
-                                    console.error("Error al actualizar saldo de la cuenta destino:", err);
-                                    res.status(500).json({ success: false, message: "Error al procesar la transacción" });
+                                    console.error("Error al confirmar la transacción:", err);
+                                    res.status(500).json({ success: false, message: "Error al confirmar la compra" });
                                 });
                             }
-
-                            db.query(insertarTransaccion, [clienteId, total, cuentaDefault], (err) => {
-                                if (err) {
-                                    return db.rollback(() => {
-                                        console.error("Error al registrar la transacción:", err);
-                                        res.status(500).json({ success: false, message: "Error al registrar la transacción" });
-                                    });
-                                }
-
-                                db.commit((err) => {
-                                    if (err) {
-                                        return db.rollback(() => {
-                                            console.error("Error al confirmar la compra:", err);
-                                            res.status(500).json({ success: false, message: "Error al confirmar la compra" });
-                                        });
-                                    }
-                                    res.json({ success: true, message: "Compra finalizada correctamente", vt_id });
-                                });
-                            });
+                            res.json({ success: true, message: "Compra finalizada correctamente", vt_id });
                         });
                     });
                 });
@@ -676,10 +650,11 @@ app.get("/descargar-factura", async (req, res) => {
 });
 
 app.post("/agregar-contenedor", (req, res) => {
-  const { peso, status } = req.body; 
+  const { peso, status, vt_id } = req.body; 
   //const cantidad = 0;
   const query = "INSERT INTO freshboxcontenedores (ct_peso, ct_status, vt_id) VALUES (?, ?, ?)";
-  db.query(query, [peso, status], (err, result) => {
+  const vtIdValue = vt_id ? vt_id : null;
+  db.query(query, [peso, status, vtIdValue], (err, result) => {
     if (err) {
       console.error("Error al insertar contenedor:", err);
       return res.status(500).json({ message: "Error al agregar el contenedor" });
